@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Define threshold percentage (e.g., 80% usage triggers alert)
+THRESHOLD=80
+
+# Define email details
+EMAIL="vamshikrishnak2506@gmail.com"
+
+# Define log file
+LOGFILE="/var/log/disk_space_monitor.log"
+
+# Ensure log file exists and set proper permissions
+if [ ! -f "$LOGFILE" ]; then
+    sudo touch "$LOGFILE"
+    sudo chmod 666 "$LOGFILE"
+fi
+
+# Get disk usage percentage for root ('/')
+USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+
+# Log current disk usage
+echo "$(date) - Current Disk Usage: ${USAGE}%" >> "$LOGFILE"
+
+# Check if usage exceeds the threshold
+if [ "$USAGE" -gt "$THRESHOLD" ]; then
+    MESSAGE="Warning: Disk space usage is at ${USAGE}% on $(hostname)"
+    echo "$MESSAGE" | mail -s "Disk Space Alert" "$EMAIL"
+    echo "$(date) - $MESSAGE" >> "$LOGFILE"
+fi
