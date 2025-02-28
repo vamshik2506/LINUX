@@ -1,0 +1,35 @@
+#!/bin/bash
+
+PATHS='/'
+HOSTNAME=$(hostname)
+CRITICAL=80
+WARNING=60
+CRITICALMAIL="vamshikrishnak2506@gmail.com"
+WARNINGMAIL="vamshikrishnak25062000@gmail.com"
+
+mkdir -p /var/log/cpualerts
+LOGFILE="/var/log/cpualerts/cpuload-$(date +%h%d%y).log"
+
+touch "$LOGFILE"
+
+for path in $PATHS
+do
+  CPULOAD=$(top -b -n 2 -d1 | grep "Cpu(s)" | tail -n1 | awk '{print $2}' | awk -F. '{print $1}')
+
+  if [ -n "$CRITICAL" ] && [ -n "$WARNING" ]; then
+    if [ "$CPULOAD" -ge "$CRITICAL" ]; then
+      echo "$(date +%h%d%y) CRITICAL - $CPULOAD on HOST $HOSTNAME" >> "$LOGFILE"
+      echo "CRITICAL CPULOAD $CPULOAD ON HOST $HOSTNAME" | mail -s "Critical CPU Load" "$CRITICALMAIL"
+      exit 1
+    elif [ "$CPULOAD" -ge "$WARNING" ] && [ "$CPULOAD" -lt "$CRITICAL" ]; then
+      echo "$(date +%h%d%y) WARNING - $CPULOAD on HOST $HOSTNAME" >> "$LOGFILE"
+      echo "WARNING CPULOAD IS $CPULOAD ON HOST $HOSTNAME" | mail -s "Warning CPU Load" "$WARNINGMAIL"
+      exit 2
+    else
+      echo "$(date +%h%d%y) OK - $CPULOAD on HOST $HOSTNAME" >> "$LOGFILE"
+      exit 0
+    fi
+  fi
+done
+
+# END #
